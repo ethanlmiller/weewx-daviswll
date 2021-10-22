@@ -45,8 +45,6 @@ DRIVER_NAME = 'DavisWLL'
 DRIVER_VERSION = '0.1'
 
 MM_TO_INCH = 0.0393701
-
-
 rain_collector_scale = {
     1: 0.01,
     2: 0.2 * MM_TO_INCH,
@@ -72,8 +70,13 @@ def track_total_rain (drvr, data, annual_rain):
     return rain_amt
 
 def scale_rain (drvr, data, amt):
+    """
+    Scale rainfall by the current scale.
+    """
     return amt * drvr.rain_scale_factor
 
+# Table of sensor information.
+# Includes Davis WLL name (from JSON), default scale, sensor "group" (for mappings), sensor type, and function to generate value (if any).
 SensorInfo = namedtuple ('SensorInfo', ['wllname', 'factor', 'metric_type', 'txid_group', 'function'])
 packet_info = {
     'outTemp'           : SensorInfo ('temp', 1, 'temp', 'W', None),
@@ -89,7 +92,7 @@ packet_info = {
     'rainRate'          : SensorInfo ('rain_rate_last', 1, 'rain', 'W', scale_rain),
     'radiation'         : SensorInfo ('solar_rad', 1, 'solar', 'W', None),
     'UV'                : SensorInfo ('uv_index', 1, 'uv', 'W', None),
-    'txBatteryStatus'   : SensorInfo ('trans_battery_flag', 'battery', 1, 'W', None),
+    'txBatteryStatus'   : SensorInfo ('trans_battery_flag', 1, 'battery', 'W', None),
     'soilTemp1'         : SensorInfo ('temp_1', 1, 'soil1', 'S', None),
     'soilTemp2'         : SensorInfo ('temp_2', 1, 'soil2', 'S', None),
     'soilTemp3'         : SensorInfo ('temp_3', 1, 'soil3', 'S', None),
@@ -126,7 +129,7 @@ except ImportError:
     import syslog
 
     def log_msg(level, msg):
-        syslog.syslog(level, 'WLL: %s' % msg)
+        syslog.syslog(level, 'DavisWLL: %s' % msg)
 
     def log_dbg(msg):
         log_msg(syslog.LOG_DEBUG, msg)
@@ -139,7 +142,7 @@ except ImportError:
 
 
 def loader(config_dict, engine):
-    return WLL(**config_dict['DavisWLL'])
+    return DavisWLL(**config_dict['DavisWLL'])
 
 class DavisWLL(weewx.drivers.AbstractDevice):
     @property
@@ -179,7 +182,6 @@ class DavisWLL(weewx.drivers.AbstractDevice):
 
     def __init__(self, **stn_dict):
         self.host = stn_dict.get('host')
-        self.mappings = stn_dict.get ('mappings')
         if not self.host:
             log_err("The WeatherLink Live hostname or ip address is required.")
         self.service_url = "http://{0}:80/v1/current_conditions".format (self.host)
@@ -195,6 +197,7 @@ class DavisWLL(weewx.drivers.AbstractDevice):
         self.txids = dict()
         self.default_weather_txid = int(stn_dict.get ('weather_transmitter_id', 1))
         self.default_soil_txid = int (stn_dict.get ('soil_transmitter_id', 2))
+        self.mappings = stn_dict.get ('mappings')
         self.init_txids (self.mappings)
 
     def hardware_name(self):
@@ -262,10 +265,10 @@ class DavisWLL(weewx.drivers.AbstractDevice):
                 value *= info.factor
                 if info.function:
                     value = info.function(self, data, value)
-                pkt[metric] = value
+                pkt.update ({metric : value})
         return pkt
 
-    def gen_loop_packets (self):
+    def genLoopPackets (self):
         while True:
             try:
                 try:
@@ -285,8 +288,7 @@ class DavisWLL(weewx.drivers.AbstractDevice):
 
 
 # Packets for testing
-
-if __name__ == '__main__':
+def testing ():
     pkt1 = {
         'did': '001D0A71262A',
         'ts': 1634925911,
@@ -338,6 +340,8 @@ if __name__ == '__main__':
     print (wll.txids)
 
     print ('Ran the test!')
-else:
-    wll = DavisWLL()
-    wll.gen_loop_packets()
+
+# daviswll = DavisWLL()
+# daviswll.genLoopPackets()
+
+
