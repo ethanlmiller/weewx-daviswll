@@ -188,8 +188,8 @@ class DavisWLL(weewx.drivers.AbstractDevice):
         self.annual_rain_scaled = None
         # Default is rain collector type 1
         self.rain_scale_factor = self.get_rain_scale_factor (1)
-        self.all_transmitters = list (range(1,9))
-        self.all_transmitters += ['B', 'I']
+        self.all_txids = list (range(1,9))
+        self.all_txids += ['B', 'I']
         self.txids = dict()
         self.default_weather_txid = stn_dict.get ('weather_transmitter_id', 1)
         self.default_soil_txid = stn_dict.get ('soil_transmitter_id', 2)
@@ -205,7 +205,8 @@ class DavisWLL(weewx.drivers.AbstractDevice):
             for m in mappings:
                 try:
                     (metric_type, txid) = m.split (':')
-                    for c in packet_info:
+                    txid = int (txid)
+                    for c in packet_info.values():
                         if c.metric_type == metric_type:
                             self.txids[c.wllname] = txid
                 except:
@@ -220,13 +221,10 @@ class DavisWLL(weewx.drivers.AbstractDevice):
     def get_condition (self, data, condition):
         if (self.txids[condition], condition) in data.keys ():
             return data[self.txids[condition],condition]
-        for tx in self.all_transmitters:
+        for tx in self.all_txids:
             if (tx,condition) in data.keys():
                 return data[tx,condition]
         return None
-
-    def preferred_txid (self, metric):
-        return self.default_weather_txid
 
     def parse_packet (self, json_data):
         # Create the new packet
@@ -329,11 +327,13 @@ if __name__ == '__main__':
                             'bar_trend': 0.052, 'bar_absolute': 29.757}]
     }
     config = {
-        'host' : '10.203.213.224'
+        'host' : '10.203.213.224',
+        'mappings': ['rain:1', 'temp:2']
     }
     wll = DavisWLL (**config)
     print (wll.parse_packet (pkt1))
     print (wll.parse_packet (pkt2))
+    print (wll.txids)
 
     print ('Ran the test!')
 else:
