@@ -6,6 +6,14 @@ This is (yet another) [weewx](https://www.weewx.com) driver for the
 Why another driver? Several reasons:
 
 * Table-driven, making it easy to add/update without writing a lot of code.
-* _Purely_ based off the [Davis WLL v4 API](), and doesn't use streaming packets, so it works even if multicast doesn't.
+* _Purely_ based off the [Davis WLL v4 API](https://weatherlink.github.io/weatherlink-live-local-api/), and doesn't use streaming packets, so it works even if multicast doesn't.
 * Good support for easy sensor <-> transmitter mapping customization.
+
+Installing the driver
+---------------------
+
+
+
+Configuring the driver
+----------------------
 
