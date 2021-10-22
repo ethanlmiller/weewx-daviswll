@@ -165,10 +165,12 @@ class DavisWLL(weewx.drivers.AbstractDevice):
     soil_transmitter_id = 2
 
     # More detailed mappings of sensors to transmitter IDs.
-    # Only specify cases where the default transmitter ID isn't correct
-    # Mappings are for temp (includes humidity), wind, and windspeed.
-    # Mappings are also for soil temp and moisture (soil1, soil2, soil3, soil4)
-    # mappings = temp:1, wind:4, soil1:2, soil2:3
+    # Only specify cases where the default transmitter ID isn't correct.
+    # Mappings are for temp (includes humidity), wind, rain, uv, solar, and battery.
+    # Mappings are also for soil temp (soil1, soil2, soil3, soil4) and soil moisture (moist1, moist2, moist3, moist4)
+    # If no transmitter is specified for a measurement (either globally as above, or locally in mappings),
+    # the lowest-number transmitter with that measurement is used.
+    # mappings = temp:1, wind:4, soil1:2, soil2:3 moist1:3
 
     # The driver to use:
     driver = user.daviswll
@@ -191,9 +193,12 @@ class DavisWLL(weewx.drivers.AbstractDevice):
         self.all_txids = list (range(1,9))
         self.all_txids += ['B', 'I']
         self.txids = dict()
-        self.default_weather_txid = stn_dict.get ('weather_transmitter_id', 1)
-        self.default_soil_txid = stn_dict.get ('soil_transmitter_id', 2)
+        self.default_weather_txid = int(stn_dict.get ('weather_transmitter_id', 1))
+        self.default_soil_txid = int (stn_dict.get ('soil_transmitter_id', 2))
         self.init_txids (self.mappings)
+
+    def hardware_name(self):
+        return self.hardware
 
     def init_txids (self, mappings):
         # Initialize default txids by large-scale group
@@ -202,7 +207,7 @@ class DavisWLL(weewx.drivers.AbstractDevice):
             self.txids[c.wllname] = default_txids[c.txid_group]
         # Set up different txids for individual mappings
         if mappings:
-            for m in mappings:
+            for m in mappings.lower().split ():
                 try:
                     (metric_type, txid) = m.split (':')
                     txid = int (txid)
@@ -214,9 +219,6 @@ class DavisWLL(weewx.drivers.AbstractDevice):
 
     def get_rain_scale_factor (self, collector_type):
         return rain_collector_scale.get (collector_type, None)
-
-    def hardware_name(self):
-        return self.hardware
 
     def get_condition (self, data, condition):
         if (self.txids[condition], condition) in data.keys ():
@@ -263,7 +265,7 @@ class DavisWLL(weewx.drivers.AbstractDevice):
                 pkt[metric] = value
         return pkt
 
-    def genLoopPackets(self):
+    def gen_loop_packets (self):
         while True:
             try:
                 try:
@@ -328,7 +330,7 @@ if __name__ == '__main__':
     }
     config = {
         'host' : '10.203.213.224',
-        'mappings': ['rain:1', 'temp:2']
+        'mappings': "rain:1 temp:2"
     }
     wll = DavisWLL (**config)
     print (wll.parse_packet (pkt1))
@@ -338,4 +340,4 @@ if __name__ == '__main__':
     print ('Ran the test!')
 else:
     wll = DavisWLL()
-    wll.genLoopPackets()
+    wll.gen_loop_packets()
