@@ -17,6 +17,11 @@ Installing the driver
 Configuring the driver
 ----------------------
 
+Testing the driver
+------------------
+
+Driver self-tests are in `test_daviswll.py`, and may be run using `pytest`. If `pytest` isn't installed
+yet, it can be installed using `pip`.
 
 License
 -------
