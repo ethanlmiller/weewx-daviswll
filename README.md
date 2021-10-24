@@ -17,3 +17,8 @@ Installing the driver
 Configuring the driver
 ----------------------
 
+
+License
+-------
+
+Licensed under the BSD 3-clause license. See the `LICENSE` file in the repository.
