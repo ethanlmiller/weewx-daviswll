@@ -79,35 +79,6 @@ def scale_rain (drvr, data, amt):
 # Table of sensor information.
 # Includes Davis WLL name (from JSON), default scale, sensor "group" (for mappings), sensor type, and function to generate value (if any).
 SensorInfo = namedtuple ('SensorInfo', ['wllname', 'factor', 'metric_type', 'txid_group', 'function'])
-packet_info = {
-    'outTemp'           : SensorInfo ('temp', 1, 'temp', 'W', None),
-    'outHumidity'       : SensorInfo ('hum', 1, 'temp', 'W', None),
-    'dewpoint'          : SensorInfo ('dew_point', 1, 'temp', 'W', None),
-    'heatindex'         : SensorInfo ('heat_index', 1, 'temp', 'W', None),
-    'windchill'         : SensorInfo ('wind_chill', 1, 'wind', 'W', None),
-    'windSpeed'         : SensorInfo ('wind_speed_last', 1, 'wind', 'W', None),
-    'windDir'           : SensorInfo ('wind_dir_last', 1, 'wind', 'W', None),
-    'windGust'          : SensorInfo ('wind_speed_hi_last_10_min', 1, 'wind', 'W', None),
-    'windGustDir'       : SensorInfo ('wind_dir_scalar_avg_last_10_min', 1, 'wind', 'W', None),
-    'rain'              : SensorInfo ('rainfall_year', 1, 'rain', 'W', track_total_rain),
-    'rainRate'          : SensorInfo ('rain_rate_last', 1, 'rain', 'W', scale_rain),
-    'radiation'         : SensorInfo ('solar_rad', 1, 'solar', 'W', None),
-    'UV'                : SensorInfo ('uv_index', 1, 'uv', 'W', None),
-    'txBatteryStatus'   : SensorInfo ('trans_battery_flag', 1, 'battery', 'W', None),
-    'soilTemp1'         : SensorInfo ('temp_1', 1, 'soil1', 'S', None),
-    'soilTemp2'         : SensorInfo ('temp_2', 1, 'soil2', 'S', None),
-    'soilTemp3'         : SensorInfo ('temp_3', 1, 'soil3', 'S', None),
-    'soilTemp4'         : SensorInfo ('temp_4', 1, 'soil4', 'S', None),
-    'soilMoist1'        : SensorInfo ('moist_soil_1', 1, 'moist1', 'S', None),
-    'soilMoist2'        : SensorInfo ('moist_soil_2', 1, 'moist2', 'S', None),
-    'soilMoist3'        : SensorInfo ('moist_soil_3', 1, 'moist3', 'S', None),
-    'soilMoist4'        : SensorInfo ('moist_soil_4', 1, 'moist4', 'S', None),
-    'barometer'         : SensorInfo ('bar_sea_level', 1, 'bar', 'B', None),
-    'pressure'          : SensorInfo ('bar_absolute', 1, 'bar', 'B', None),
-    'inTemp'            : SensorInfo ('temp_in', 1, 'indoor', 'I', None),
-    'inHumidity'        : SensorInfo ('hum_in', 1, 'indoor', 'I', None),
-    'inDewpoint'        : SensorInfo ('dew_point_in', 1, 'indoor', 'I', None),
-}
 
 try:
     # WeeWX 4 logging
@@ -182,6 +153,35 @@ class DavisWLL(weewx.drivers.AbstractDevice):
 """
 
     def __init__(self, **stn_dict):
+        self.sensor_info = {
+            'outTemp'           : SensorInfo ('temp', 1, 'temp', 'W', None),
+            'outHumidity'       : SensorInfo ('hum', 1, 'temp', 'W', None),
+            'dewpoint'          : SensorInfo ('dew_point', 1, 'temp', 'W', None),
+            'heatindex'         : SensorInfo ('heat_index', 1, 'temp', 'W', None),
+            'windchill'         : SensorInfo ('wind_chill', 1, 'wind', 'W', None),
+            'windSpeed'         : SensorInfo ('wind_speed_last', 1, 'wind', 'W', None),
+            'windDir'           : SensorInfo ('wind_dir_last', 1, 'wind', 'W', None),
+            'windGust'          : SensorInfo ('wind_speed_hi_last_10_min', 1, 'wind', 'W', None),
+            'windGustDir'       : SensorInfo ('wind_dir_at_hi_speed_last_10_min', 1, 'wind', 'W', None),
+            'rain'              : SensorInfo ('rainfall_year', 1, 'rain', 'W', track_total_rain),
+            'rainRate'          : SensorInfo ('rain_rate_last', 1, 'rain', 'W', scale_rain),
+            'radiation'         : SensorInfo ('solar_rad', 1, 'solar', 'W', None),
+            'UV'                : SensorInfo ('uv_index', 1, 'uv', 'W', None),
+            'txBatteryStatus'   : SensorInfo ('trans_battery_flag', 1, 'battery', 'W', None),
+            'soilTemp1'         : SensorInfo ('temp_1', 1, 'soil1', 'S', None),
+            'soilTemp2'         : SensorInfo ('temp_2', 1, 'soil2', 'S', None),
+            'soilTemp3'         : SensorInfo ('temp_3', 1, 'soil3', 'S', None),
+            'soilTemp4'         : SensorInfo ('temp_4', 1, 'soil4', 'S', None),
+            'soilMoist1'        : SensorInfo ('moist_soil_1', 1, 'moist1', 'S', None),
+            'soilMoist2'        : SensorInfo ('moist_soil_2', 1, 'moist2', 'S', None),
+            'soilMoist3'        : SensorInfo ('moist_soil_3', 1, 'moist3', 'S', None),
+            'soilMoist4'        : SensorInfo ('moist_soil_4', 1, 'moist4', 'S', None),
+            'barometer'         : SensorInfo ('bar_sea_level', 1, 'bar', 'B', None),
+            'pressure'          : SensorInfo ('bar_absolute', 1, 'bar', 'B', None),
+            'inTemp'            : SensorInfo ('temp_in', 1, 'indoor', 'I', None),
+            'inHumidity'        : SensorInfo ('hum_in', 1, 'indoor', 'I', None),
+            'inDewpoint'        : SensorInfo ('dew_point_in', 1, 'indoor', 'I', None),
+        }
         self.host = stn_dict.get('host')
         if not self.host:
             log_err("The WeatherLink Live hostname or ip address is required.")
@@ -207,7 +207,7 @@ class DavisWLL(weewx.drivers.AbstractDevice):
     def init_txids (self, mappings):
         # Initialize default txids by large-scale group
         default_txids = {'W': self.default_weather_txid, 'S': self.default_soil_txid, 'B': 'B', 'I': 'I'}
-        for c in packet_info.values():
+        for c in self.sensor_info.values():
             self.txids[c.wllname] = default_txids[c.txid_group]
         # Set up different txids for individual mappings
         if mappings:
@@ -215,7 +215,7 @@ class DavisWLL(weewx.drivers.AbstractDevice):
                 try:
                     (metric_type, txid) = m.split (':')
                     txid = int (txid)
-                    for c in packet_info.values():
+                    for c in self.sensor_info.values():
                         if c.metric_type == metric_type:
                             self.txids[c.wllname] = txid
                 except:
@@ -260,7 +260,7 @@ class DavisWLL(weewx.drivers.AbstractDevice):
                     continue
                 data[txid,k] = v
 
-        for metric, info in packet_info.items():
+        for metric, info in self.sensor_info.items():
             value = self.get_condition (data, info.wllname)
             if value != None:
                 value *= info.factor
@@ -286,61 +286,6 @@ class DavisWLL(weewx.drivers.AbstractDevice):
                 log_err("Error parsing the WeatherLink Live json data.")
                 log_err("%s" % exception)
             time.sleep(self.poll_interval)
-
-class TestDavisWLL(unittest.TestCase):
-
-
-    def test_packet_handling (self):
-        config = {
-            'host' : '10.203.213.224',
-            'mappings': "rain:1 temp:2"
-        }
-        drvr = DavisWLL (**config)
-        readings = (
-            ({'did': '001D0A71262A',
-              'ts': 1634925911,
-              'conditions': [{'lsid': 330316, 'data_structure_type': 1, 'txid': 5, 'temp': 57.9, 'hum': 97.6,
-                            'dew_point': 57.2, 'wet_bulb': 57.5, 'heat_index': 58.7, 'wind_chill': 57.9,
-                            'thw_index': 58.7, 'thsw_index': 64.4, 'wind_speed_last': 2.0, 'wind_dir_last': 360,
-                            'wind_speed_avg_last_1_min': 1.18, 'wind_dir_scalar_avg_last_1_min': 360,
-                            'wind_speed_avg_last_2_min': 1.5, 'wind_dir_scalar_avg_last_2_min': 360,
-                            'wind_speed_hi_last_2_min': 2.0, 'wind_dir_at_hi_speed_last_2_min': 360,
-                            'wind_speed_avg_last_10_min': 1.56, 'wind_dir_scalar_avg_last_10_min': 360,
-                            'wind_speed_hi_last_10_min': 4.0, 'wind_dir_at_hi_speed_last_10_min': 360,
-                            'rain_size': 1, 'rain_rate_last': 0, 'rain_rate_hi': 0, 'rainfall_last_15_min': 0,
-                            'rain_rate_hi_last_15_min': 0, 'rainfall_last_60_min': 0, 'rainfall_last_24_hr': 44,
-                            'rain_storm': 73, 'rain_storm_start_at': 1634730060,
-                            'solar_rad': 378, 'uv_index': 1.8, 'rx_state': 0, 'trans_battery_flag': 0,
-                            'rainfall_daily': 44, 'rainfall_monthly': 77, 'rainfall_year': 986,
-                            'rain_storm_last': 4, 'rain_storm_last_start_at': 1634521081, 'rain_storm_last_end_at': 1634648461},
-                           {'lsid': 330311, 'data_structure_type': 4, 'temp_in': 70.9, 'hum_in': 57.4, 'dew_point_in': 55.1,
-                            'heat_index_in': 70.1}, {'lsid': 330310, 'data_structure_type': 3, 'bar_sea_level': 30.074,
-                            'bar_trend': 0.054, 'bar_absolute': 29.755}]
-            },{}),
-            ({'did': '001D0A71262A',
-                  'ts': 1634926765,
-                  'conditions': [{'lsid': 330316, 'data_structure_type': 1, 'txid': 5, 'temp': 57.7, 'hum': 97.2,
-                                'dew_point': 56.9, 'wet_bulb': 57.2, 'heat_index': 58.4, 'wind_chill': 57.7,
-                                'thw_index': 58.4, 'thsw_index': 64.5, 'wind_speed_last': 2.0, 'wind_dir_last': 360,
-                                'wind_speed_avg_last_1_min': 0.5, 'wind_dir_scalar_avg_last_1_min': 360,
-                                'wind_speed_avg_last_2_min': 0.93, 'wind_dir_scalar_avg_last_2_min': 360,
-                                'wind_speed_hi_last_2_min': 2.0, 'wind_dir_at_hi_speed_last_2_min': 360,
-                                'wind_speed_avg_last_10_min': 1.56, 'wind_dir_scalar_avg_last_10_min': 360,
-                                'wind_speed_hi_last_10_min': 4.0, 'wind_dir_at_hi_speed_last_10_min': 360,
-                                'rain_size': 1, 'rain_rate_last': 0, 'rain_rate_hi': 0, 'rainfall_last_15_min': 0,
-                                'rain_rate_hi_last_15_min': 0, 'rainfall_last_60_min': 0, 'rainfall_last_24_hr': 44,
-                                'rain_storm': 73, 'rain_storm_start_at': 1634730060,
-                                'solar_rad': 445, 'uv_index': 2.1, 'rx_state': 0, 'trans_battery_flag': 0,
-                                'rainfall_daily': 45, 'rainfall_monthly': 78, 'rainfall_year': 987,
-                                'rain_storm_last': 4, 'rain_storm_last_start_at': 1634521081, 'rain_storm_last_end_at': 1634648461},
-                               {'lsid': 330311, 'data_structure_type': 4, 'temp_in': 70.8, 'hum_in': 57.6, 'dew_point_in': 55.1,
-                                'heat_index_in': 70.0}, {'lsid': 330310, 'data_structure_type': 3, 'bar_sea_level': 30.076,
-                                'bar_trend': 0.052, 'bar_absolute': 29.757}]
-            },{})
-        )
-        for r in readings:
-            rsp, pkt = r
-            self.assertEqual (drvr.parse_packet (rsp), pkt)
 
 # daviswll = DavisWLL()
 # daviswll.genLoopPackets()
