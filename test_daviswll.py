@@ -64,12 +64,96 @@ readings = (
     )
 )
 
-def test_packet_handler ():
-    config = {
+configs = (
+    ({
         'host' : '10.203.213.224',
-        'weather_transmitter_id' : 5,
-        'soil_transmitter_id' : 5,
-    }
+        'weather_transmitter_id' : '5',
+    },
+    {
+        'temp'          : 5,
+        'hum'           : 5,
+        'dew_point'     : 5,
+        'heat_index'    : 5,
+        'wind_chill'    : 5,
+        'wind_speed_last' : 5,
+        'wind_dir_last' : 5,
+        'wind_speed_hi_last_10_min' : 5,
+        'wind_dir_at_hi_speed_last_10_min' : 5,
+        'rainfall_year' : 5,
+        'rain_rate_last' : 5,
+        'solar_rad'     : 5,
+        'uv_index'      : 5,
+        'trans_battery_flag' : 5,
+        'temp_1'        : 2,
+        'temp_2'        : 2,
+        'temp_3'        : 2,
+        'temp_4'        : 2,
+        'moist_soil_1'  : 2,
+        'moist_soil_2'  : 2,
+        'moist_soil_3'  : 2,
+        'moist_soil_4'  : 2,
+    }),
+    ({
+        'host' : '10.203.213.224',
+        'soil_transmitter_id' : '4',
+    },
+    {
+        'temp'          : 1,
+        'hum'           : 1,
+        'dew_point'     : 1,
+        'heat_index'    : 1,
+        'wind_chill'    : 1,
+        'wind_speed_last' : 1,
+        'wind_dir_last' : 1,
+        'wind_speed_hi_last_10_min' : 1,
+        'wind_dir_at_hi_speed_last_10_min' : 1,
+        'rainfall_year' : 1,
+        'rain_rate_last' : 1,
+        'solar_rad'     : 1,
+        'uv_index'      : 1,
+        'trans_battery_flag' : 1,
+        'temp_1'        : 4,
+        'temp_2'        : 4,
+        'temp_3'        : 4,
+        'temp_4'        : 4,
+        'moist_soil_1'  : 4,
+        'moist_soil_2'  : 4,
+        'moist_soil_3'  : 4,
+        'moist_soil_4'  : 4,
+    }),
+    ({
+        'host' : '10.203.213.224',
+        'soil_transmitter_id' : '4',
+        'mappings'      : 'temp:3 rain:7 solar:5'
+    },
+    {
+        'temp'          : 3,
+        'hum'           : 3,
+        'dew_point'     : 3,
+        'heat_index'    : 3,
+        'wind_chill'    : 1,
+        'wind_speed_last' : 1,
+        'wind_dir_last' : 1,
+        'wind_speed_hi_last_10_min' : 1,
+        'wind_dir_at_hi_speed_last_10_min' : 1,
+        'rainfall_year' : 7,
+        'rain_rate_last' : 7,
+        'solar_rad'     : 5,
+        'uv_index'      : 1,
+        'trans_battery_flag' : 1,
+        'temp_1'        : 4,
+        'temp_2'        : 4,
+        'temp_3'        : 4,
+        'temp_4'        : 4,
+        'moist_soil_1'  : 4,
+        'moist_soil_2'  : 4,
+        'moist_soil_3'  : 4,
+        'moist_soil_4'  : 4,
+    }),
+)
+
+def test_packet_handler ():
+    config = configs[0][0]
     drvr = DavisWLL (**config)
 
     for r in readings:
@@ -77,3 +161,10 @@ def test_packet_handler ():
         pkt = drvr.parse_packet (rsp)
         for k in desired.keys():
             assert isclose (desired[k], pkt[k], rel_tol=1e-6)
+
+
+def test_set_config ():
+    for c in configs:
+        drvr = DavisWLL (**c[0])
+        for k,v in c[1].items():
+            assert (drvr.txids[k] == v)
